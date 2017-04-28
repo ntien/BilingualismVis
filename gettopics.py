@@ -2,14 +2,12 @@
 #scikit learn
 from __future__ import print_function
 from __future__ import division
-
-import re
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-
 from sklearn.decomposition import LatentDirichletAllocation
+import re
 
 languages = ["french", "spanish", "chinese", "mandarin", "german","russian"]
-words = ["family", "bilingual", "biligualism", "multilingualism", "mother"]
+words = ["family", "bilingual", "biligualism", "multilingualism", "lillehaugen","lille"]
 
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
@@ -19,12 +17,18 @@ def print_top_words(model, feature_names, n_top_words):
               for i in topic.argsort()[:-n_top_words - 1:-1]]))
     print()
 
-
 def get_top_words(model, feature_names, n_top_words):
     topics = {}
     for topic_idx, topic in enumerate(model.components_):
       topics[topic_idx] = [feature_names[i] for i in topic.argsort()[:-n_top_words -1:-1]]
     return topics
+
+def get_top_topic(sim_matrix):
+  toptopics = {}
+  for i in range(len(sim_matrix)):  #there should be 30
+    toptopics[i] = sim_matrix[i].argmax()
+  return toptopics
+
 
 files = []
 record = {}
@@ -54,7 +58,7 @@ for i,doc in enumerate(files):
 data = [" ".join(doc) for doc in files]
 
 
-n_topics = 29
+n_topics = 26
 maxdocfreq = 0.63
 mindocfreq = 12
 n_features = 1000
@@ -76,12 +80,7 @@ tfidf_feature_names = tfidf_vectorizer.get_feature_names()
 #print_top_words(lda, tfidf_feature_names, n_top_words)
 topics_to_words = get_top_words(lda, tfidf_feature_names, n_top_words)
 
-def get_top_topic(sim_matrix):
-  toptopics = {}
-  for i in range(len(sim_matrix)):  #there should be 30
-    toptopics[i] = sim_matrix[i].argmax()
-  return toptopics
-print_top_words(lda, tfidf_feature_names, n_top_words)
+#print_top_words(lda, tfidf_feature_names, n_top_words)
 
 tt = get_top_topic(distrs)
 #pairwise_similarity = distrs * distrs.transpose
@@ -100,6 +99,19 @@ for doc in top:
   print("\n")
 '''
 
+#for each topic, grab top 5 documents that have highest distributions of that topic
+revdistrs = distrs.T
+circles = {}
+circles["name"] = "vis"
+circles["children"] = []
+for i in range(len(revdistrs)):
+    docs = revdistrs[i].argsort()[-7:][::-1]
+    subcircle = {"name": "topic " + str(i)}
+    subcircle["children"] = [{"name": "interview" + str(i), "size": 1000} for i in docs]
+    circles["children"].append(subcircle)
 
 
+import json
+with open("js/flare.json","w") as f:
+  json.dump(circles, f)
 
