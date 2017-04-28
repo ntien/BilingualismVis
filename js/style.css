@@ -1,9 +1,13 @@
+.circle {
+fill: #3182bd;
+}
+
 
 .node {
   cursor: pointer;
-  }
+}
 
-  .node:hover {
+.node:hover {
 stroke: #000;
   stroke-width: 1.5px;
   }

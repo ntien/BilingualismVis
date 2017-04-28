@@ -4,10 +4,131 @@ from __future__ import print_function
 from __future__ import division
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
+from nltk.corpus import stopwords as sw
 import re
 
-languages = ["french", "spanish", "chinese", "mandarin", "german","russian"]
-words = ["family", "bilingual", "biligualism", "multilingualism", "lillehaugen","lille"]
+languages = [{"name": "Farsi",
+             "children": [
+              {"name": "1", "size": 2000}
+            ]},
+            {"name": "Arabic",
+             "children": [
+              {"name": "1", "size": 2000}
+            ]},
+            {"name": "Russian",
+             "children": [
+              {"name": "2", "size": 2000}
+            ]},
+            {"name": "Italian",
+             "children": [
+              {"name": "3", "size": 2000},
+              {"name": "30", "size": 2000}
+            ]},
+            {"name": "Hindi",
+             "children": [
+              {"name": "4", "size": 2000}
+            ]},
+            {"name": "Spanish",
+             "children": [
+              {"name": "5", "size": 2000},
+              {"name": "7", "size": 2000},
+              {"name": "8", "size": 2000},
+              {"name": "10", "size": 2000},
+              {"name": "13", "size": 2000},
+              {"name": "15", "size": 2000},
+              {"name": "17", "size": 2000},
+              {"name": "21", "size": 2000},
+              {"name": "23", "size": 2000},
+              {"name": "24", "size": 2000},
+              {"name": "25", "size": 2000}
+            ]},
+            {"name": "Albanian",
+             "children": [
+              {"name": "6", "size": 2000}
+            ]},
+           {"name": "French",
+             "children": [
+              {"name": "7", "size": 2000},
+              {"name": "8", "size": 2000},
+              {"name": "10", "size": 2000},
+              {"name": "11", "size": 2000},
+              {"name": "22", "size": 2000},
+              {"name": "28", "size": 2000},
+              {"name": "30", "size": 2000}
+            ]},
+           {"name": "Haitian Creole",
+             "children": [
+              {"name": "7", "size": 2000},
+              {"name": "28", "size": 2000},
+            ]},
+            {"name": "Korean",
+             "children": [
+              {"name": "9", "size": 2000},
+              {"name": "24", "size": 2000},
+              {"name": "26", "size": 2000},
+            ]},
+            {"name": "Mandarin",
+             "children": [
+              {"name": "9", "size": 2000},
+              {"name": "12", "size": 2000},
+              {"name": "14", "size": 2000},
+              {"name": "16", "size": 2000},
+              {"name": "18", "size": 2000},
+              {"name": "19", "size": 2000},
+              {"name": "20", "size": 2000},
+              {"name": "22", "size": 2000},
+              {"name": "29", "size": 2000},
+            ]},
+            {"name": "Portuguese",
+             "children": [
+              {"name": "10", "size": 2000},
+              {"name": "17", "size": 2000}
+            ]},
+            {"name": "Thai",
+             "children": [
+              {"name": "11", "size": 2000}
+            ]},
+            {"name": "Dutch",
+             "children": [
+              {"name": "12", "size": 2000}
+            ]},
+            {"name": "German",
+             "children": [
+              {"name": "12", "size": 2000}
+            ]},
+            {"name": "Kashmiri",
+             "children": [
+              {"name": "12", "size": 2000}
+            ]},
+            {"name": "Catalan",
+             "children": [
+              {"name": "13", "size": 2000}
+            ]},
+            {"name": "Esperanto",
+             "children": [
+              {"name": "14", "size": 2000}
+            ]},
+            {"name": "Singlish",
+             "children": [
+              {"name": "18", "size": 2000}
+            ]},
+            {"name": "Cantonese",
+             "children": [
+              {"name": "19", "size": 2000},
+              {"name": "22", "size": 2000}
+            ]},
+            {"name": "Hunan",
+             "children": [
+              {"name": "19", "size": 2000},
+            ]},
+            {"name": "Hungarian",
+             "children": [
+              {"name": "27", "size": 2000},
+            ]}
+      ]
+
+words = ["family", "bilingual", "biligualism", "multilingualism", "lillehaugen","lille", "page"]
+languages = languages[1:]
 
 def print_top_words(model, feature_names, n_top_words):
     for topic_idx, topic in enumerate(model.components_):
@@ -42,6 +163,9 @@ for i in range(1,31):
         l = re.sub(r'\([0-9]*\)','',l)
         l = re.sub(r'Spanish','',l)
         l = re.sub(r'French','',l)
+        l = re.sub(r'Italian','',l)
+        l = re.sub(r'Mandarin','',l)
+        l = re.sub(r'Haverford','',l)
         l = re.sub(r'Chinese','',l)
         l = re.sub(r'family','',l)
         l = re.sub(r'bilingualism','',l)
@@ -53,15 +177,24 @@ for i in range(1,31):
 
 for i,doc in enumerate(files):
   name = doc[0]
-  record[i+1] = name
+  title = doc[1].split()
+  record[i+1] = " ".join(title)
 
+stop = set(sw.words('english'))
+data = [[word for word in doc if word not in stop] for doc in files]
 data = [" ".join(doc) for doc in files]
+print(data[0])
+for d in languages:
+  for child in d["children"]:
+    x = int(float(child["name"]))
+    child["name"] = str(x) + ". " + record[x]
 
 
-n_topics = 26
-maxdocfreq = 0.63
-mindocfreq = 12
-n_features = 1000
+
+n_topics = 12
+maxdocfreq = 0.60
+mindocfreq = 7
+n_features = 1001
 n_top_words = 20
 
 
@@ -80,7 +213,7 @@ tfidf_feature_names = tfidf_vectorizer.get_feature_names()
 #print_top_words(lda, tfidf_feature_names, n_top_words)
 topics_to_words = get_top_words(lda, tfidf_feature_names, n_top_words)
 
-#print_top_words(lda, tfidf_feature_names, n_top_words)
+print_top_words(lda, tfidf_feature_names, n_top_words)
 
 tt = get_top_topic(distrs)
 #pairwise_similarity = distrs * distrs.transpose
@@ -105,10 +238,20 @@ circles = {}
 circles["name"] = "vis"
 circles["children"] = []
 for i in range(len(revdistrs)):
-    docs = revdistrs[i].argsort()[-7:][::-1]
-    subcircle = {"name": "topic " + str(i)}
-    subcircle["children"] = [{"name": "interview" + str(i), "size": 1000} for i in docs]
-    circles["children"].append(subcircle)
+    docs = [j for j in range(len(revdistrs[i])) if revdistrs[i][j] > 0.3]
+    if len(docs) > 0:
+      subcircle = {"name": "topic " + str(i)}
+      subcircle["children"] = [{"name": str(k) + ". " + record[k+1], "size": 2000} for k in docs]
+      circles["children"].append(subcircle)
+
+test = [topic.values() for topic in circles["children"]]
+t1 = [item for sublist in test for item in sublist if "topic" not in item]
+t2 = [item["name"] for sublist in t1 for item in sublist]
+#print(30 == len(set(t2)))
+#print(len(set(t2)))
+
+circles["children"].append({"name":"languages", "children":languages})
+
 
 
 import json

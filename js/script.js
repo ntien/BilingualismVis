@@ -1,9 +1,34 @@
-<script>
-
-  var svg = d3.select("svg"),
+var svg = d3.select("svg"),
 margin = 20,
 diameter = +svg.attr("width"),
 g = svg.append("g").attr("transform", "translate(" + diameter / 2 + "," + diameter / 2 + ")");
+
+function wrap(text, width) {
+  console.log("here");
+  text.each(function() {
+    var text = d3.select(this),
+    words = text.text().split(/\s+/).reverse(),
+    word,
+    line = [],
+    lineNumber = 0,
+    lineHeight = 1.1, // ems
+    y = text.attr("y"),
+    dy = 0.1,
+    tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+    //console.log(words);
+    while (word = words.pop()) {
+      line.push(word);
+      tspan.text(line.join(" "));
+      if (tspan.node().getComputedTextLength() > width) {
+        line.pop();
+        tspan.text(line.join(" "));
+        line = [word];
+        tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+      }
+    }
+  })
+}
+
 
 var color = d3.scaleLinear()
   .domain([-1, 5])
@@ -30,47 +55,57 @@ var circle = g.selectAll("circle")
 .enter().append("circle")
 .attr("class", function(d) { return d.parent ? d.children ? "node" : "node node--leaf" : "node node--root"; })
 .style("fill", function(d) { return d.children ? color(d.depth) : null; })
-  .on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+.on("click", function(d) { if (focus !== d) zoom(d), d3.event.stopPropagation(); });
+
+g.selectAll(".node").style("fill", "#3182bd");
+g.selectAll(".node--root").style("fill", "#deebf7");
+g.selectAll(".node--leaf").style("fill", "white");
 
 var text = g.selectAll("text")
   .data(nodes)
   .enter().append("text")
   .attr("class", "label")
-.style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
-.style("display", function(d) { return d.parent === root ? "inline" : "none"; })
-.text(function(d) { return d.data.name; });
+  .attr("dy","0.1px")
+  .style("fill-opacity", function(d) { return d.parent === root ? 1 : 0; })
+  .style("display", function(d) { return d.parent === root ? "inline" : "none"; })
+  .text(function(d) { return d.data.name; });
 
-  var node = g.selectAll("circle,text");
+
+//svg.selectAll('.label').each(insertLinebreaks);
+
+var node = g.selectAll("circle,text");
 
 svg
-.style("background", color(-1))
-  .on("click", function() { zoom(root); });
+.style("background", "#9ecae1")
+  .on("click", function() { zoom(root);
+
+  });
 
 zoomTo([root.x, root.y, root.r * 2 + margin]);
 
-function zoom(d) {
-var focus0 = focus; focus = d;
 
-var transition = d3.transition()
-  .duration(d3.event.altKey ? 7500 : 750)
-.tween("zoom", function(d) {
-var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
-return function(t) { zoomTo(i(t)); };
-  });
+function zoom(d) {
+  var focus0 = focus; focus = d;
+
+  var transition = d3.transition()
+    .duration(d3.event.altKey ? 7500 : 750)
+    .tween("zoom", function(d) {
+      var i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2 + margin]);
+      return function(t) { zoomTo(i(t)); };
+    });
 
   transition.selectAll("text")
   .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
-.style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
-.on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
-  .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  .style("fill-opacity", function(d) { return d.parent === focus ? 1 : 0; })
+  .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+  .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; })
+
 }
 
 function zoomTo(v) {
-var k = diameter / v[2]; view = v;
-node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
-  circle.attr("r", function(d) { return d.r * k; });
-}
+  var k = diameter / v[2]; view = v;
+  node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+  circle.attr("r", function(d) { return d.r * k; })
+  }
 });
-
-</script>
 
